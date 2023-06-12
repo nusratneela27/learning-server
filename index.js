@@ -52,7 +52,19 @@ async function run() {
             res.send(result);
         })
 
-        // ClassCartCollection
+        // ClassCart Collection API
+        app.get('/carts', async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            if (!email) {
+                res.send([]);
+            }
+
+            const query = { email: email };
+            const result = await classCartCollection.find(query).toArray();
+            res.send(result);
+        })
+
         app.post('/carts', async (req, res) => {
             const selectedClass = req.body;
             const result = await classCartCollection.insertOne(selectedClass);
