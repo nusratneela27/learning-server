@@ -44,6 +44,7 @@ async function run() {
         const usersCollection = client.db("learningCamp").collection("users");
         const classCollection = client.db("learningCamp").collection("class");
         const classCartCollection = client.db("learningCamp").collection("classCart");
+        const instructorCollection = client.db("learningCamp").collection("instructors");
 
         // jwt
         app.post('/jwt', (req, res) => {
@@ -81,6 +82,12 @@ async function run() {
             }
             const result = await usersCollection.insertOne(user);
             res.send(result);
+        })
+
+        // Instructor API
+        app.get('/all-instructors', async (req, res) => {
+            const instructor = await instructorCollection.find().toArray();
+            res.send(instructor);
         })
 
         // check admin
