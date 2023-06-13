@@ -161,6 +161,13 @@ async function run() {
             res.send(result);
         })
 
+        app.post('/class', async (req, res) => {
+            const newClass = req.body;
+            console.log(newClass);
+            const result = await classCollection.insertOne(newClass)
+            res.send(result);
+        })
+
         // ClassCart Collection API
         app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
