@@ -14,7 +14,6 @@ const verifyJWT = (req, res, next) => {
     if (!authorization) {
         return res.status(401).send({ error: true, message: 'unauthorized access' });
     }
-    // bearer token
     const token = authorization.split(' ')[1];
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
@@ -50,13 +49,24 @@ async function run() {
         app.post('/jwt', (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-                expiresIn: '1h'
+                expiresIn: '2 day'
             })
             res.send({ token })
         })
 
+        // verify admin
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            if (user?.role !== 'admin') {
+                return res.status(403).send({ error: true, message: 'forbidden message' });
+            }
+            next();
+        }
+
         // users related API
-        app.get('/users', verifyJWT, async (req, res) => {
+        app.get('/users', verifyJWT, verifyAdmin, async (req, res) => {
             const result = await usersCollection.find().toArray();
             res.send(result);
         })
@@ -97,7 +107,7 @@ async function run() {
 
             const query = { email: email }
             const user = await usersCollection.findOne(query);
-            const result = { admin: user?.role === 'instructor' }
+            const result = { instructor: user?.role === 'instructor' }
             res.send(result);
         })
 
