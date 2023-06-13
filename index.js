@@ -175,7 +175,7 @@ async function run() {
             res.send(result);
         })
 
-        // ClassCart Collection API
+        // ClassCart Collection APIss
         app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
             if (!email) {
