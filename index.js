@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -35,15 +36,44 @@ async function run() {
             res.send(result);
         })
 
+        // students API
         app.post('/users', async (req, res) => {
             const user = req.body;
             const query = { email: user.email }
             const existingUser = await usersCollection.findOne(query);
             if (existingUser) {
-                return res.send({ message: 'user already exists' })
+                return res.send({ message: 'student already exists' })
             }
             const result = await usersCollection.insertOne(user);
             res.send(result);
+        })
+
+        // admin
+        app.patch('/users/admin/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    role: 'admin',
+                },
+            };
+
+            const result = await usersCollection.updateOne(filter, updateDoc)
+            res.send(result)
+        })
+
+        // instructor
+        app.patch('/users/instructor/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    role: 'instructor',
+                },
+            };
+
+            const result = await usersCollection.updateOne(filter, updateDoc)
+            res.send(result)
         })
 
         // Class related API
