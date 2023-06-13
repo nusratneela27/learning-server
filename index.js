@@ -168,6 +168,13 @@ async function run() {
             res.send(result);
         })
 
+        app.delete('/class/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await classCollection.deleteOne(query);
+            res.send(result);
+        })
+
         // ClassCart Collection API
         app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
