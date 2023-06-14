@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.PAYMENT_SECRET_KEY)
 const port = process.env.PORT || 5000;
 
 // middleware 
@@ -39,12 +40,13 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const usersCollection = client.db("learningCamp").collection("users");
         const classCollection = client.db("learningCamp").collection("class");
         const classCartCollection = client.db("learningCamp").collection("classCart");
         const instructorCollection = client.db("learningCamp").collection("instructors");
+        const paymentCollection = client.db("learningCamp").collection("payments");
 
         // jwt
         app.post('/jwt', (req, res) => {
@@ -202,6 +204,36 @@ async function run() {
             const query = { _id: new ObjectId(id) };
             const result = await classCartCollection.deleteOne(query);
             res.send(result)
+        })
+
+        // payment create
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+        })
+
+        // payment api
+        app.get('/payments/student', async (req, res) => {
+            const result = await paymentCollection.find().toArray();
+            res.send(result);
+        });
+        app.post('/payments', verifyJWT, async (req, res) => {
+            const payment = req.body;
+            const insertResult = await paymentCollection.insertOne(payment);
+
+            const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } }
+            const deleteResult = await classCartCollection.deleteMany(query)
+
+            res.send({ insertResult, deleteResult });
         })
 
         // Send a ping to confirm a successful connection
